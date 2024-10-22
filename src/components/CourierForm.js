@@ -16,7 +16,7 @@ const CourierForm = () => {
     }
   };
 
-  return <BaseForm fields={courierFields} onSubmit={handleSubmit} />;
+  return <BaseForm fields={courierFields} onSubmit={handleSubmit} role="courier" />;
 };
 
 export default CourierForm;

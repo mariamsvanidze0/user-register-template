@@ -16,7 +16,7 @@ const UserForm = () => {
     }
   };
 
-  return <BaseForm fields={userFields} onSubmit={handleSubmit} />;
+  return <BaseForm fields={userFields} onSubmit={handleSubmit} role="user" />;
 };
 
 export default UserForm;

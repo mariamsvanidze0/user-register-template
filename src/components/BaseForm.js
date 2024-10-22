@@ -1,12 +1,16 @@
-//ეს კომპონენტი აიღებს ველების ჩამონათვალს და დინამიურად გამოიტანს მათ.
-
+// src/components/BaseForm.js - განახლებული ვერსია
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { TextField, Button } from '@mui/material';
 import * as Yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
-const BaseForm = ({ fields, onSubmit }) => {
+const BaseForm = ({ fields, onSubmit, role }) => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
   const validationSchema = Yup.object().shape(
     fields.reduce((schema, field) => {
       if (field.optional) {
@@ -20,8 +24,34 @@ const BaseForm = ({ fields, onSubmit }) => {
     resolver: yupResolver(validationSchema),
   });
 
+  const handleFormSubmit = async (data) => {
+    try {
+      const response = await onSubmit(data);
+      // Add role to user data
+      const userData = { ...response, role };
+      login(userData);
+      
+      // Redirect based on role
+      switch(role) {
+        case 'admin':
+          navigate('/admin-dashboard');
+          break;
+        case 'user':
+          navigate('/user-dashboard');
+          break;
+        case 'courier':
+          navigate('/courier-dashboard');
+          break;
+        default:
+          navigate('/');
+      }
+    } catch (error) {
+      console.error('Registration failed:', error);
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(handleFormSubmit)}>
       {fields.map((field) => (
         <div key={field.name}>
           <TextField
@@ -32,6 +62,7 @@ const BaseForm = ({ fields, onSubmit }) => {
             helperText={errors[field.name]?.message}
             fullWidth
             margin="normal"
+            type={field.name === 'password' ? 'password' : 'text'}
           />
         </div>
       ))}
@@ -41,8 +72,3 @@ const BaseForm = ({ fields, onSubmit }) => {
 };
 
 export default BaseForm;
-
-
-//ეს კომპონენტი იღებს ორ რეკვიზიტს: ველებს (ფორმის ველების მასივი) და onSubmit (ფუნქცია ფორმის წარდგენის დასამუშავებლად).
-//ის იყენებს React Hook Form-ს ფორმის სახელმწიფო მართვისთვის და Yup-ს ვალიდაციისთვის.
-//ფორმის თითოეული ველი დინამიურად არის გადმოცემული ველების მასივის საფუძველზე.

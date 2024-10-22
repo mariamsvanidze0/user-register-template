@@ -20,7 +20,7 @@ const AdminForm = () => {
     }
   };
 
-  return <BaseForm fields={adminFields} onSubmit={handleSubmit} />;
+  return <BaseForm fields={adminFields} onSubmit={handleSubmit} role="admin" />;
 };
 
 export default AdminForm;

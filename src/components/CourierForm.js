@@ -5,12 +5,16 @@ import React from 'react';
 import BaseForm from './BaseForm';
 import { courierFields } from './formFields';
 import { registerUser } from '../services/apiService';
+import { useUserContext } from '../context/UserContext';
 
 const CourierForm = () => {
+  const { setUser } = useUserContext();
+
   const handleSubmit = async (data) => {
     try {
       const response = await registerUser(data);
       console.log('Courier registered:', response);
+      setUser(response); 
     } catch (error) {
       console.error(error);
     }
@@ -20,4 +24,3 @@ const CourierForm = () => {
 };
 
 export default CourierForm;
-

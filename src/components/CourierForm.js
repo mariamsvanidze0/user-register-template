@@ -1,6 +1,8 @@
 // CourierForm კომპონენტი კურიერის მომხმარებლის რეგისტრაციისთვის. 
 // ის იყენებს BaseForm-ს კურიერის მომხმარებლებისთვის საჭირო ველების გამოსატანად.
 
+// CourierForm.js
+
 import React from 'react';
 import BaseForm from './BaseForm';
 import { courierFields } from './formFields';
@@ -14,9 +16,9 @@ const CourierForm = () => {
     try {
       const response = await registerUser(data);
       console.log('Courier registered:', response);
-      setUser(response); 
+      setUser(response); // Save the user data in context
     } catch (error) {
-      console.error(error);
+      console.error('Error registering courier:', error);
     }
   };
 

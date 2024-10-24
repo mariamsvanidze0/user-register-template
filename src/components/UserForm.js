@@ -8,8 +8,13 @@ const UserForm = () => {
   const { setUser } = useUserContext();
 
   const handleSubmit = async (data) => {
+    const formData = new FormData();
+    for (const key in data) {
+      formData.append(key, data[key]);
+    }
+
     try {
-      const response = await registerUser(data);
+      const response = await registerUser(formData);
       console.log('User registered:', response);
       setUser(response); 
     } catch (error) {
@@ -21,3 +26,4 @@ const UserForm = () => {
 };
 
 export default UserForm;
+

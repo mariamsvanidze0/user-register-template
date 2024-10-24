@@ -17,9 +17,9 @@ export const userFields = [
   { name: 'phoneNumber', label: 'Phone Number', optional: false },
   { name: 'email', label: 'Email', optional: false },
   { name: 'password', label: 'Password', optional: false },
+  { name: 'longitude', label: 'Longitude', optional: false },
+  { name: 'latitude', label: 'Latitude', optional: false },
   { name: 'profileImage', label: 'Profile Image', optional: true },
-  { name: 'address.lng', label: 'Longitude', optional: false },
-  { name: 'address.lat', label: 'Latitude', optional: false },
 ];
 
 export const courierFields = [

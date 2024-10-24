@@ -1,3 +1,4 @@
+
 // src/components/CourierForm.js
 import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
@@ -101,7 +102,7 @@ const CourierForm = () => {
       console.log('Courier registered:', response);
       setUser(response);
     } catch (error) {
-      console.error(error);
+      console.error('Error registering courier:', error);
     }
   };
 

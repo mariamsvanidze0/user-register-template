@@ -1,4 +1,6 @@
-// src/components/BaseForm.js - განახლებული ვერსია
+// 
+
+// src/components/BaseForm.js
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { TextField, Button } from '@mui/material';
@@ -11,6 +13,7 @@ const BaseForm = ({ fields, onSubmit, role }) => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  // Define validation schema
   const validationSchema = Yup.object().shape(
     fields.reduce((schema, field) => {
       if (field.optional) {
@@ -26,7 +29,14 @@ const BaseForm = ({ fields, onSubmit, role }) => {
 
   const handleFormSubmit = async (data) => {
     try {
-      const response = await onSubmit(data);
+      const formData = new FormData();
+      // Append text fields to FormData
+      for (const key in data) {
+        formData.append(key, data[key]);
+      }
+      // Call the onSubmit function with FormData
+      const response = await onSubmit(formData);
+      
       // Add role to user data
       const userData = { ...response, role };
       login(userData);
@@ -54,16 +64,25 @@ const BaseForm = ({ fields, onSubmit, role }) => {
     <form onSubmit={handleSubmit(handleFormSubmit)}>
       {fields.map((field) => (
         <div key={field.name}>
-          <TextField
-            {...register(field.name)}
-            label={field.label}
-            variant="outlined"
-            error={!!errors[field.name]}
-            helperText={errors[field.name]?.message}
-            fullWidth
-            margin="normal"
-            type={field.name === 'password' ? 'password' : 'text'}
-          />
+          {field.name === 'profileImage' ? (
+            <input
+              {...register(field.name)}
+              type="file"
+              accept="image/*"
+              style={{ margin: '16px 0' }} // Optional: Add some margin for better spacing
+            />
+          ) : (
+            <TextField
+              {...register(field.name)}
+              label={field.label}
+              variant="outlined"
+              error={!!errors[field.name]}
+              helperText={errors[field.name]?.message}
+              fullWidth
+              margin="normal"
+              type={field.name === 'password' ? 'password' : 'text'}
+            />
+          )}
         </div>
       ))}
       <Button type="submit" variant="contained" color="primary">Submit</Button>

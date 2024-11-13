@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Button, Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Select, MenuItem, TextField } from '@mui/material';
-import { getUsers, assignTask, getUserDetails, updateUserDetails } from '../../services/apiService';
+import { 
+  Button, Typography, Box, Table, TableBody, TableCell, TableContainer, 
+  TableHead, TableRow, TablePagination, Select, MenuItem, TextField, Dialog, DialogTitle, DialogContent, DialogActions 
+} from '@mui/material';
+import { getUsers, assignTask, getUserDetails, updateUserDetails, deleteUserProfile } from '../../services/apiService';
 
 export const AdminDashboard = () => {
   const { user, logout } = useAuth();
@@ -11,20 +14,27 @@ export const AdminDashboard = () => {
   const [filter, setFilter] = useState('user');
   const [selectedUser, setSelectedUser] = useState(null);
   const [newTask, setNewTask] = useState({ name: '', description: '', time: '', priority: '' });
+  const [openTaskDialog, setOpenTaskDialog] = useState(false);
+  const [taskCourierId, setTaskCourierId] = useState(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
-      const fetchedUsers = await getUsers({ filter, page });
+      const fetchedUsers = await getUsers({ filter, page, rowsPerPage });
       setUsers(fetchedUsers);
     };
     fetchUsers();
-  }, [filter, page]);
+  }, [filter, page, rowsPerPage]);
 
-  const handleTaskAssign = async (courierId) => {
+  const handleTaskAssign = async () => {
     if (!newTask.name || !newTask.description || !newTask.time || !newTask.priority) return;
-
-    await assignTask(courierId, newTask);
+    await assignTask(taskCourierId, newTask);
+    setOpenTaskDialog(false);
     setNewTask({ name: '', description: '', time: '', priority: '' });
+  };
+
+  const handleOpenTaskDialog = (courierId) => {
+    setTaskCourierId(courierId);
+    setOpenTaskDialog(true);
   };
 
   const handleSelectUser = async (userId) => {
@@ -34,8 +44,12 @@ export const AdminDashboard = () => {
 
   const handleUpdateUser = async () => {
     if (!selectedUser) return;
-
     await updateUserDetails(selectedUser.id, selectedUser);
+  };
+
+  const handleDeleteCourier = async (courierId) => {
+    await deleteUserProfile(courierId);
+    setUsers(users.filter(user => user.id !== courierId));
   };
 
   const handleChangePage = (event, newPage) => {
@@ -51,15 +65,13 @@ export const AdminDashboard = () => {
     <Box p={3}>
       <Typography variant="h4">Admin Dashboard</Typography>
       <Typography variant="body1">Welcome, {user.firstName}!</Typography>
-      <Box mt={2}>
-        <Typography>Email: {user.email}</Typography>
-        <Typography>Role: {user.role}</Typography>
-      </Box>
+
       <Box mt={3}>
         <Select value={filter} onChange={(e) => setFilter(e.target.value)} displayEmpty>
           <MenuItem value="user">User</MenuItem>
           <MenuItem value="courier">Courier</MenuItem>
         </Select>
+        
         <TableContainer>
           <Table>
             <TableHead>
@@ -79,7 +91,10 @@ export const AdminDashboard = () => {
                   <TableCell>
                     <Button onClick={() => handleSelectUser(user.id)}>View</Button>
                     {user.role === 'courier' && (
-                      <Button onClick={() => handleTaskAssign(user.id)}>Assign Task</Button>
+                      <>
+                        <Button onClick={() => handleOpenTaskDialog(user.id)}>Assign Task</Button>
+                        <Button color="error" onClick={() => handleDeleteCourier(user.id)}>Delete</Button>
+                      </>
                     )}
                   </TableCell>
                 </TableRow>
@@ -87,6 +102,7 @@ export const AdminDashboard = () => {
             </TableBody>
           </Table>
         </TableContainer>
+        
         <TablePagination
           rowsPerPageOptions={[10, 20, 30]}
           component="div"
@@ -97,7 +113,7 @@ export const AdminDashboard = () => {
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Box>
-      
+
       {selectedUser && (
         <Box mt={3}>
           <Typography variant="h5">Update User: {selectedUser.firstName}</Typography>
@@ -119,6 +135,43 @@ export const AdminDashboard = () => {
           </Button>
         </Box>
       )}
+
+      <Dialog open={openTaskDialog} onClose={() => setOpenTaskDialog(false)}>
+        <DialogTitle>Assign Task</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Task Name"
+            value={newTask.name}
+            onChange={(e) => setNewTask({ ...newTask, name: e.target.value })}
+            fullWidth
+          />
+          <TextField
+            label="Description"
+            value={newTask.description}
+            onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+            fullWidth
+            sx={{ mt: 2 }}
+          />
+          <TextField
+            label="Time"
+            value={newTask.time}
+            onChange={(e) => setNewTask({ ...newTask, time: e.target.value })}
+            fullWidth
+            sx={{ mt: 2 }}
+          />
+          <TextField
+            label="Priority"
+            value={newTask.priority}
+            onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
+            fullWidth
+            sx={{ mt: 2 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenTaskDialog(false)}>Cancel</Button>
+          <Button onClick={handleTaskAssign} color="primary">Assign</Button>
+        </DialogActions>
+      </Dialog>
 
       <Button variant="contained" color="secondary" onClick={logout} sx={{ mt: 2 }}>
         Logout

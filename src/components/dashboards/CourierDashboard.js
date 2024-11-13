@@ -1,33 +1,30 @@
-// CourierDashboard.js
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Button, Typography, Box, MenuItem, Select } from '@mui/material';
+import { Button, Typography, Box, TextField } from '@mui/material';
+import { getCourierData, updateCourierData, getAssignedTasks } from '../../services/apiService';
 
 export const CourierDashboard = () => {
-  const { user, logout } = useAuth(); // Fetch user data from context
-  const [workingDays, setWorkingDays] = useState([
-    { day: 'Monday', startHours: '00:00', endHours: '15:20' },
-    { day: 'Tuesday', startHours: '09:00', endHours: '18:20' },
-    { day: 'Wednesday', startHours: '11:00', endHours: '20:00' }
-  ]);
+  const { user, logout } = useAuth();
+  const [workingDays, setWorkingDays] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [newWorkingDay, setNewWorkingDay] = useState({ day: '', hours: '' });
 
-  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  const hours = Array.from({ length: 48 }, (_, i) => `${String(Math.floor(i / 2)).padStart(2, '0')}:${i % 2 === 0 ? '00' : '30'}`);
+  useEffect(() => {
+    const fetchCourierData = async () => {
+      const courierData = await getCourierData();
+      setWorkingDays(courierData.workingDays);
+      setTasks(await getAssignedTasks(user.id));
+    };
+    fetchCourierData();
+  }, [user]);
 
-  const addDayField = () => {
-    if (workingDays.length < 7) {
-      setWorkingDays([...workingDays, { day: '', startHours: '00:00', endHours: '00:00' }]);
-    }
+  const handleAddWorkingDay = () => {
+    setWorkingDays([...workingDays, newWorkingDay]);
+    setNewWorkingDay({ day: '', hours: '' });
   };
 
-  const handleDayChange = (index, field, value) => {
-    const updatedDays = workingDays.map((item, i) => (i === index ? { ...item, [field]: value } : item));
-    setWorkingDays(updatedDays);
-  };
-
-  const handleSubmit = async () => {
-
+  const handleUpdateProfile = async () => {
+    await updateCourierData({ workingDays });
   };
 
   return (
@@ -37,53 +34,49 @@ export const CourierDashboard = () => {
       <Box mt={2}>
         <Typography>Email: {user.email}</Typography>
         <Typography>Vehicle: {user.vehicle}</Typography>
-        <Typography variant="h6" sx={{ mt: 2 }}>Working Schedule:</Typography>
-
-        {workingDays.map((workDay, index) => (
-          <Box key={index} display="flex" gap={2} mb={2}>
-            <Select
-              value={workDay.day}
-              onChange={(e) => handleDayChange(index, 'day', e.target.value)}
-              displayEmpty
-              sx={{ width: '150px' }}
-            >
-              <MenuItem value="" disabled>Select Day</MenuItem>
-              {daysOfWeek.map((day) => (
-                <MenuItem key={day} value={day}>{day}</MenuItem>
-              ))}
-            </Select>
-
-            <Select
-              value={workDay.startHours}
-              onChange={(e) => handleDayChange(index, 'startHours', e.target.value)}
-              sx={{ width: '100px' }}
-            >
-              {hours.map((time) => (
-                <MenuItem key={time} value={time}>{time}</MenuItem>
-              ))}
-            </Select>
-
-            <Select
-              value={workDay.endHours}
-              onChange={(e) => handleDayChange(index, 'endHours', e.target.value)}
-              sx={{ width: '100px' }}
-            >
-              {hours.map((time) => (
-                <MenuItem key={time} value={time}>{time}</MenuItem>
-              ))}
-            </Select>
+      </Box>
+      <Box mt={2}>
+        <Typography variant="h6">Working Schedule:</Typography>
+        {workingDays.map((wd, index) => (
+          <Box key={index}>
+            <Typography>{wd.day} - {wd.hours}</Typography>
           </Box>
         ))}
-
-        <Button variant="contained" color="primary" onClick={addDayField} disabled={workingDays.length >= 7}>
-          Add Day
+        <TextField
+          label="Day"
+          value={newWorkingDay.day}
+          onChange={(e) => setNewWorkingDay({ ...newWorkingDay, day: e.target.value })}
+          fullWidth 
+        />
+        <TextField
+          label="Hours"
+          value={newWorkingDay.hours}
+          onChange={(e) => setNewWorkingDay({ ...newWorkingDay, hours: e.target.value })}
+          fullWidth 
+          sx={{ mt: 2 }}
+        />
+        <Button variant="contained" color="primary" onClick={handleAddWorkingDay} sx={{ mt: 2 }}>
+          Add Working Day
         </Button>
-
-        <Button variant="contained" color="success" onClick={handleSubmit} sx={{ ml: 2 }}>
-          Submit
+        <Button variant="contained" color="primary" onClick={handleUpdateProfile} sx={{ mt: 2 }}>
+          Update Profile
         </Button>
       </Box>
-
+      <Box mt={2}>
+        <Typography variant="h6">Assigned Tasks:</Typography>
+        {tasks.length ? (
+          tasks.map((task, index) => (
+            <Box key={index}>
+              <Typography>Name: {task.name}</Typography>
+              <Typography>Description: {task.description}</Typography>
+              <Typography>Time: {task.time}</Typography>
+              <Typography>Priority: {task.priority}</Typography>
+            </Box>
+          ))
+        ) : (
+          <Typography>No tasks assigned.</Typography>
+        )}
+      </Box>
       <Button variant="contained" color="secondary" onClick={logout} sx={{ mt: 2 }}>
         Logout
       </Button>
